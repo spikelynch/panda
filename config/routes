@@ -4,4 +4,7 @@
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
 
-/ HomeR GET POST
+/                         HomeR   GET POST
+
+/select/#FilePath         SelectR GET
+/render/#FilePath         RenderR GET
