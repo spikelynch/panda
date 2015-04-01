@@ -10,6 +10,7 @@ Email
     UniqueEmail email
 
 Document
+    hash Text
     filename Text
     format Text
  -- By default this file is used in Model.hs (which is imported by Foundation.hs)

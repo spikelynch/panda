@@ -7,9 +7,12 @@ import Yesod.Form.Bootstrap3
 
 import System.FilePath
 import System.Directory (doesFileExist)
-import Data.Text as T
-import Data.ByteString.Lazy as BL
-
+import qualified System.IO.UTF8 as IU
+import qualified Data.ByteString.Lazy.UTF8 as BU
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as E
+import qualified Data.ByteString.Lazy as BL
+import qualified Crypto.Hash.SHA1 as SHA
 import Text.Pandoc
 import Text.Pandoc.MediaBag
 
@@ -36,8 +39,8 @@ postHomeR = do
     ((result, formWidget), formEnctype) <- runFormPost sampleForm
     case result of
      FormSuccess (file, info) -> do
-       filename <- writeToServer file
-       _ <- runDB $ insert (Document (T.pack filename) "format")
+       ( filename, hash, format ) <- writeToServer file
+       _ <- runDB $ insert (Document (T.pack filename) (E.decodeASCII hash) format)
        setMessage "Document uploaded"
      _ -> do
        setMessage "Something went wrong"
@@ -57,12 +60,15 @@ sampleForm = renderBootstrap3 BootstrapBasicForm $ (,)
 
 
 
-writeToServer :: FileInfo -> Handler FilePath
+--writeToServer :: FileInfo -> Handler ( FilePath, BL.ByteString, Text )
 writeToServer file = do
     let filename = T.unpack $ fileName file
         path = mkFilePath filename
     liftIO $ fileMove file path
-    return filename
+    bytes <- liftIO $ BL.readFile path
+    hash <- return $ SHA.hashlazy bytes
+    format <- return $ fileContentType file
+    return ( filename, hash, format )
 
 mkFilePath :: String -> FilePath
 mkFilePath f = uploadDirectory </> f
